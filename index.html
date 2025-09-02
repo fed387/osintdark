@@ -14,56 +14,72 @@ body {
 }
 header {
   padding: 2rem;
-  background: #330000;
+  background: #003300;
   font-size: 3rem;
   font-weight: bold;
-  color: #ff0000;
-  text-shadow: 0 0 10px #ff0000;
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00;
 }
 .container {
   padding: 2rem;
+  max-width: 700px;
+  margin: 0 auto;
 }
 input, button, textarea {
   padding: 0.8rem;
-  margin: 0.5rem;
+  margin: 0.5rem 0;
   border: none;
   border-radius: 6px;
   font-size: 1rem;
 }
 input { width: 250px; }
-textarea { width: 100%; height: 150px; }
+textarea { width: 100%; height: 120px; }
 button {
   background: #ff0000;
-  color: #000;
+  color: #fff;
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
-button:hover { background: #990000; color: #fff; }
+button:hover { background: #990000; }
 .panel {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: #220000;
+  background: #003300;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(255,0,0,0.3);
+  box-shadow: 0 0 15px rgba(0,255,0,0.3);
   display: none;
   text-align: left;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }
-.panel h2 { color: #ff0000; margin-top: 0; }
+.panel h2 { color: #00ff00; margin-top: 0; }
+#discordContact {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+}
+#discordContact img {
+  width: 24px;
+  height: 24px;
+}
 </style>
 </head>
 <body>
 <header>OSINTDark</header>
 
 <div class="container">
+  <div id="discordContact">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg" alt="Discord Logo">
+    Contact: <a href="https://discord.com/users/larpingattacks" style="color:#00ff00;">@larpingattacks</a>
+  </div>
+
   <!-- Register / Login -->
   <div id="registerLoginPanel" class="panel" style="display:block;">
     <h2>👤 Register / Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
     <button onclick="registerUser()">Register</button>
     <button onclick="loginUser()">Login</button>
     <div id="loginMessage" style="margin-top:1rem;color:#ff0000;"></div>
@@ -87,11 +103,18 @@ button:hover { background: #990000; color: #fff; }
   <!-- Admin Panel -->
   <div id="adminPanel" class="panel">
     <h2>Admin Panel</h2>
-    <p>Paste DiscordID | IP entries below (one per line), then click "Add Entries". They will immediately be usable in lookup.</p>
+    <p>Paste DiscordID | IP entries below (one per line) to add to the database:</p>
     <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146&#10;123456789012345678 | 8.8.8.8"></textarea>
     <button onclick="addDatabaseBulk()">Add Entries</button>
+
     <h3>Database Entries:</h3>
     <pre id="dbEntries"></pre>
+
+    <h3>Blacklist Manager:</h3>
+    <textarea id="blacklistInput" placeholder="Enter Discord IDs to blacklist, one per line"></textarea>
+    <button onclick="updateBlacklist()">Update Blacklist</button>
+    <h4>Current Blacklist:</h4>
+    <pre id="blacklistDisplay"></pre>
   </div>
 </div>
 
@@ -133,6 +156,12 @@ function loginUser() {
 function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
+
+  let blacklist = (localStorage.getItem("osintBlacklist") || "").split("\n").filter(Boolean);
+  if (blacklist.includes(id)) {
+    document.getElementById("discordResult").innerHTML = "<b>This Discord ID is blacklisted.</b>";
+    return;
+  }
 
   let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
   const entry = db.find(line => line.split("|")[0].trim() === id);
@@ -179,6 +208,24 @@ function showDatabase() {
 }
 
 /* =========================
+   Blacklist Manager
+========================= */
+function updateBlacklist() {
+  const input = document.getElementById("blacklistInput").value.trim();
+  if(!input) return alert("Enter at least one Discord ID");
+
+  let blacklist = input.split("\n").map(e => e.trim()).filter(Boolean);
+  localStorage.setItem("osintBlacklist", blacklist.join("\n"));
+  showBlacklist();
+  document.getElementById("blacklistInput").value = "";
+}
+
+function showBlacklist() {
+  let blacklist = (localStorage.getItem("osintBlacklist") || "").split("\n").filter(Boolean);
+  document.getElementById("blacklistDisplay").textContent = blacklist.join("\n") || "(empty)";
+}
+
+/* =========================
    Demo Admin User
 ========================= */
 window.onload = () => {
@@ -188,6 +235,7 @@ window.onload = () => {
     localStorage.setItem("osintUsers", JSON.stringify(users));
   }
   showDatabase();
+  showBlacklist();
 };
 </script>
 </body>
