@@ -5,36 +5,38 @@
 <title>OSINTDark - Lookup Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { margin:0; font-family:'Orbitron',sans-serif; background:#0a0a0a; color:#0fff9e; text-align:center; }
-header { padding:2rem; background:linear-gradient(90deg,#00ff99,#00ccff); font-size:3rem; font-weight:bold; color:#0a0a0a; text-shadow:0 0 15px #00ff99,0 0 30px #00ccff; }
+body { margin:0; font-family:'Orbitron',sans-serif; background:#000; color:#ff0000; text-align:center; }
+header { padding:2rem; background:linear-gradient(90deg,#ff0000,#990000); font-size:3rem; font-weight:bold; color:#000; text-shadow:0 0 15px #ff0000,0 0 30px #990000; }
 .container { padding:2rem; max-width:800px; margin:auto; }
 input,button,textarea { padding:0.8rem; margin:0.5rem; border:none; border-radius:6px; font-size:1rem; outline:none; }
-input,select { width:250px; background:#111; color:#0fff9e; }
-textarea { width:100%; height:120px; background:#111; color:#0fff9e; }
-button { background:#0fff9e; color:#0a0a0a; cursor:pointer; font-weight:bold; transition:0.2s; }
-button:hover { background:#00cc7a; color:#fff; }
-.panel { margin-top:2rem; padding:1.5rem; background:#111; border-radius:10px; box-shadow:0 0 15px #0fff9e; display:none; text-align:left; }
-.panel h2 { color:#0fff9e; margin-top:0; }
+input,select { width:250px; background:#111; color:#ff0000; }
+textarea { width:100%; height:120px; background:#111; color:#ff0000; }
+button { background:#ff0000; color:#000; cursor:pointer; font-weight:bold; transition:0.2s; }
+button:hover { background:#990000; color:#fff; }
+.panel { margin-top:2rem; padding:1.5rem; background:#111; border-radius:10px; box-shadow:0 0 15px #ff0000; display:none; text-align:left; }
+.panel h2 { color:#ff0000; margin-top:0; }
 .lookup-group { display:flex; flex-wrap:wrap; justify-content:center; gap:0.5rem; margin-bottom:0.5rem; }
 .lookup-group input { flex:1; min-width:150px; }
 .lookup-group button { flex:0 0 auto; }
-#lookupResult { margin-top:1rem; white-space:pre-wrap; color:#0fff9e; }
+#lookupResult { margin-top:1rem; white-space:pre-wrap; color:#ff0000; }
 </style>
 </head>
 <body>
 <header>OSINTDark</header>
 <div class="container">
 
+<!-- Register / Login -->
 <div id="registerLoginPanel" class="panel" style="display:block;">
 <h2>👤 Register / Login</h2>
 <input type="text" id="username" placeholder="Username">
 <input type="password" id="password" placeholder="Password">
 <button onclick="registerUser()">Register</button>
 <button onclick="loginUser()">Login</button>
-<div id="loginMessage" style="margin-top:1rem;color:#0fff9e;"></div>
+<div id="loginMessage" style="margin-top:1rem;color:#ff0000;"></div>
 <p>Contact: <b>@larpingattacks</b></p>
 </div>
 
+<!-- User Panel -->
 <div id="userPanel" class="panel">
 <h2>🔎 Lookups</h2>
 
@@ -66,28 +68,30 @@ button:hover { background:#00cc7a; color:#fff; }
 <div id="lookupResult"></div>
 </div>
 
+<!-- Admin Panel Trigger -->
 <div id="adminLoginTrigger" class="panel">
 <h2>⚙️ Admin Login</h2>
 <input type="password" id="adminPass" placeholder="Enter admin password">
 <button onclick="loginAdmin()">Login as Admin</button>
 </div>
 
+<!-- Admin Panel -->
 <div id="adminPanel" class="panel">
 <h2>Admin Panel</h2>
 <p>Paste multiple DiscordID | IP entries (one per line).</p>
 <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146"></textarea>
 <button onclick="addDatabaseBulk()">Add Entries</button>
 </div>
-</div>
 
+</div>
 <script>
 /* User Management */
 function registerUser(){
   const u=document.getElementById("username").value.trim();
   const p=document.getElementById("password").value.trim();
-  if(!u||!p)return alert("Fill both fields");
+  if(!u||!p){alert("Fill both fields"); return;}
   let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
-  if(users[u]) return alert("Username exists");
+  if(users[u]){alert("Username exists"); return;}
   users[u]={password:p,isAdmin:false};
   localStorage.setItem("osintUsers",JSON.stringify(users));
   document.getElementById("loginMessage").textContent="Registered successfully!";
@@ -96,9 +100,9 @@ function registerUser(){
 function loginUser(){
   const u=document.getElementById("username").value.trim();
   const p=document.getElementById("password").value.trim();
-  if(!u||!p)return alert("Fill both fields");
+  if(!u||!p){alert("Fill both fields"); return;}
   let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
-  if(!users[u]||users[u].password!==p)return alert("Invalid username or password");
+  if(!users[u]||users[u].password!==p){alert("Invalid username or password"); return;}
   document.getElementById("registerLoginPanel").style.display="none";
   document.getElementById("userPanel").style.display="block";
   document.getElementById("adminLoginTrigger").style.display="block";
@@ -107,7 +111,7 @@ function loginUser(){
 /* Public Discord ID → IP Lookup */
 function lookupDiscordID(){
   const id=document.getElementById("discordInput").value.trim();
-  if(!id) return alert("Enter a Discord ID");
+  if(!id){alert("Enter a Discord ID"); return;}
   let db=JSON.parse(localStorage.getItem("osintDB")||"[]");
   if(!Array.isArray(db)) db=[];
   const entry=db.find(e=>e.discordId===id);
@@ -116,20 +120,20 @@ function lookupDiscordID(){
 }
 
 /* Other Lookups */
-async function lookupIP(){const ip=document.getElementById("ipInput").value.trim();if(!ip)return alert("Enter an IP");try{const r=await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);const d=await r.json();if(d.status==="fail"){document.getElementById("lookupResult").innerHTML="Breach not found";return;}document.getElementById("lookupResult").innerHTML=`<b>IP:</b> ${d.query}<br><b>Country:</b> ${d.country}<br><b>City:</b> ${d.city}<br><b>ISP:</b> ${d.isp}<br><b>Org:</b> ${d.org}<br><b>ASN:</b> ${d.as}`;}catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+async function lookupIP(){const ip=document.getElementById("ipInput").value.trim();if(!ip){alert("Enter an IP"); return;}try{const r=await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);const d=await r.json();if(d.status==="fail"){document.getElementById("lookupResult").innerHTML="Breach not found";return;}document.getElementById("lookupResult").innerHTML=`<b>IP:</b> ${d.query}<br><b>Country:</b> ${d.country}<br><b>City:</b> ${d.city}<br><b>ISP:</b> ${d.isp}<br><b>Org:</b> ${d.org}<br><b>ASN:</b> ${d.as}`;}catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
 async function lookupPhone(){await breachLookup('phoneInput','phone');}
 async function lookupDomain(){await breachLookup('domainInput','domain');}
 async function lookupEmail(){await breachLookup('emailInput','email');}
-async function breachLookup(inputId,type){const v=document.getElementById(inputId).value.trim();if(!v)return alert("Enter a value");try{const r=await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`,{method:"POST",headers:{"X-RapidAPI-Key":"b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d","Content-Type":"application/json"},body:JSON.stringify({value:v})});const d=await r.json();document.getElementById("lookupResult").innerHTML=(d&&Object.keys(d).length)?JSON.stringify(d,null,2):"Breach not found";}catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+async function breachLookup(inputId,type){const v=document.getElementById(inputId).value.trim();if(!v){alert("Enter a value"); return;}try{const r=await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`,{method:"POST",headers:{"X-RapidAPI-Key":"b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d","Content-Type":"application/json"},body:JSON.stringify({value:v})});const d=await r.json();document.getElementById("lookupResult").innerHTML=(d&&Object.keys(d).length)?JSON.stringify(d,null,2):"Breach not found";}catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
 
 /* Admin */
 function loginAdmin(){const p=document.getElementById("adminPass").value;if(p==="admin123"){document.getElementById("adminPanel").style.display="block";document.getElementById("adminLoginTrigger").style.display="none";}else alert("Wrong admin password!");}
-function addDatabaseBulk(){const input=document.getElementById("dbInput").value.trim();if(!input)return alert("Enter at least one entry");let db=JSON.parse(localStorage.getItem("osintDB")||"[]");const entries=input.split("\n").map(l=>{const [discordId,ip]=l.split("|").map(e=>e.trim());return {discordId,ip};});db=db.concat(entries);localStorage.setItem("osintDB",JSON.stringify(db));document.getElementById("dbInput").value="";}
+function addDatabaseBulk(){const input=document.getElementById("dbInput").value.trim();if(!input){alert("Enter at least one entry"); return;}let db=JSON.parse(localStorage.getItem("osintDB")||"[]");const entries=input.split("\n").map(l=>{const [discordId,ip]=l.split("|").map(e=>e.trim());return {discordId,ip};});db=db.concat(entries);localStorage.setItem("osintDB",JSON.stringify(db));document.getElementById("dbInput").value="";}
 
 /* Initialize */
 window.onload=()=>{
   let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
-  if(!users["admin"]){users["admin"]={password:"admin123",isAdmin:true};localStorage.setItem("osintUsers",JSON.stringify(users));}
+  if(!users["admin"]){users["admin"]={password:"admin123",isAdmin:true}; localStorage.setItem("osintUsers",JSON.stringify(users));}
   if(!localStorage.getItem("osintDB")) localStorage.setItem("osintDB","[]");
 };
 </script>
