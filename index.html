@@ -5,23 +5,28 @@
 <title>OSINTDark - Lookup Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* =========================
+   Base Styles
+========================= */
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #001100;
-  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  background-color: #0a0a0a;
+  color: #0fff9e;
   text-align: center;
 }
 header {
   padding: 2rem;
-  background: #002244;
+  background: linear-gradient(90deg, #00ff99, #00ccff);
   font-size: 3rem;
   font-weight: bold;
-  color: #00ff00;
-  text-shadow: 0 0 10px #00ff00;
+  color: #0a0a0a;
+  text-shadow: 0 0 15px #00ff99, 0 0 30px #00ccff;
 }
 .container {
   padding: 2rem;
+  max-width: 800px;
+  margin: auto;
 }
 input, button, textarea {
   padding: 0.8rem;
@@ -29,30 +34,28 @@ input, button, textarea {
   border: none;
   border-radius: 6px;
   font-size: 1rem;
+  outline: none;
 }
-input, select { width: 250px; }
-textarea { width: 100%; height: 120px; }
+input, select { width: 250px; background-color: #111; color: #0fff9e; }
+textarea { width: 100%; height: 120px; background-color: #111; color: #0fff9e; }
 button {
-  background: #00ff00;
-  color: #000;
+  background: #0fff9e;
+  color: #0a0a0a;
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
-button:hover { background: #009900; color: #fff; }
+button:hover { background: #00cc7a; color: #fff; }
 .panel {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: #002244;
+  background: #111;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,255,0,0.3);
+  box-shadow: 0 0 15px #0fff9e;
   display: none;
   text-align: left;
-  max-width: 650px;
-  margin-left: auto;
-  margin-right: auto;
 }
-.panel h2 { color: #00ff00; margin-top: 0; }
+.panel h2 { color: #0fff9e; margin-top: 0; }
 .lookup-group {
   display: flex;
   flex-wrap: wrap;
@@ -62,7 +65,7 @@ button:hover { background: #009900; color: #fff; }
 }
 .lookup-group input { flex: 1; min-width: 150px; }
 .lookup-group button { flex: 0 0 auto; }
-#lookupResult { margin-top: 1rem; white-space: pre-wrap; }
+#lookupResult { margin-top: 1rem; white-space: pre-wrap; color: #0fff9e; }
 </style>
 </head>
 <body>
@@ -76,7 +79,7 @@ button:hover { background: #009900; color: #fff; }
     <input type="password" id="password" placeholder="Password">
     <button onclick="registerUser()">Register</button>
     <button onclick="loginUser()">Login</button>
-    <div id="loginMessage" style="margin-top:1rem;color:#00ff00;"></div>
+    <div id="loginMessage" style="margin-top:1rem;color:#0fff9e;"></div>
     <p>Contact: <b>@larpingattacks</b></p>
   </div>
 
@@ -88,10 +91,6 @@ button:hover { background: #009900; color: #fff; }
     <div class="lookup-group">
       <input type="text" id="discordInput" placeholder="Discord ID">
       <button onclick="lookupDiscordID()">Discord ID → IP</button>
-    </div>
-    <div class="lookup-group">
-      <input type="text" id="discordPair" placeholder="DiscordID | IP">
-      <button onclick="addDiscordEntry()">Add Entry</button>
     </div>
 
     <!-- IP Lookup -->
@@ -168,26 +167,23 @@ function loginUser() {
 }
 
 /* =========================
-   Discord ID → IP
+   Discord ID → IP (Neon API)
 ========================= */
-function lookupDiscordID() {
+async function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  const entry = db.find(line => line.split("|")[0].trim() === id);
-  document.getElementById("lookupResult").innerHTML = entry 
-    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.split("|")[1].trim()}`
-    : "Not found in database.";
-}
 
-function addDiscordEntry() {
-  const entry = document.getElementById("discordPair").value.trim();
-  if (!entry.includes("|")) return alert("Format must be: DiscordID | IP");
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  db.push(entry);
-  localStorage.setItem("osintDB", db.join("\n"));
-  document.getElementById("discordPair").value = "";
-  alert("Entry added!");
+  try {
+    const res = await fetch(`https://app-polished-sky-88221043.dpl.myneon.app/lookup/${id}`);
+    const data = await res.json();
+
+    document.getElementById("lookupResult").innerHTML = data.ip
+      ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${data.ip}`
+      : "Not found in database.";
+  } catch (err) {
+    console.error(err);
+    document.getElementById("lookupResult").innerHTML = "Error contacting database";
+  }
 }
 
 /* =========================
@@ -221,7 +217,10 @@ async function breachLookup(inputId, type) {
   try {
     const res = await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`, {
       method: "POST",
-      headers: { "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d", "Content-Type": "application/json" },
+      headers: { 
+        "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d", 
+        "Content-Type": "application/json" 
+      },
       body: JSON.stringify({ value })
     });
     const data = await res.json();
@@ -230,7 +229,7 @@ async function breachLookup(inputId, type) {
 }
 
 /* =========================
-   Admin Login & DB
+   Admin Login & DB (Neon API)
 ========================= */
 function loginAdmin() {
   const pass = document.getElementById("adminPass").value;
@@ -241,19 +240,41 @@ function loginAdmin() {
   } else alert("Wrong admin password!");
 }
 
-function addDatabaseBulk() {
+async function addDatabaseBulk() {
   const input = document.getElementById("dbInput").value.trim();
-  if(!input) return alert("Enter at least one entry");
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  db = db.concat(input.split("\n").map(e=>e.trim()).filter(Boolean));
-  localStorage.setItem("osintDB", db.join("\n"));
-  showDatabase();
-  document.getElementById("dbInput").value = "";
+  if (!input) return alert("Enter at least one entry");
+
+  const entries = input.split("\n").map(line => {
+    const [discordId, ip] = line.split("|").map(e => e.trim());
+    return { discordId, ip };
+  });
+
+  try {
+    await fetch("https://app-polished-sky-88221043.dpl.myneon.app/add-bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries })
+    });
+    document.getElementById("dbInput").value = "";
+    alert("Entries added to Neon database!");
+    showDatabase();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add entries");
+  }
 }
 
-function showDatabase() {
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  document.getElementById("dbEntries").textContent = db.join("\n") || "(empty)";
+async function showDatabase() {
+  try {
+    const res = await fetch("https://app-polished-sky-88221043.dpl.myneon.app/entries");
+    const data = await res.json();
+    document.getElementById("dbEntries").textContent = data.length
+      ? data.map(e => `${e.discord_id} | ${e.ip_address}`).join("\n")
+      : "(empty)";
+  } catch (err) {
+    console.error(err);
+    document.getElementById("dbEntries").textContent = "(unable to fetch)";
+  }
 }
 
 /* =========================
@@ -261,7 +282,10 @@ function showDatabase() {
 ========================= */
 window.onload = () => {
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (!users["admin"]) { users["admin"] = { password: "admin123", isAdmin: true }; localStorage.setItem("osintUsers", JSON.stringify(users)); }
+  if (!users["admin"]) { 
+    users["admin"] = { password: "admin123", isAdmin: true }; 
+    localStorage.setItem("osintUsers", JSON.stringify(users)); 
+  }
 };
 </script>
 </body>
