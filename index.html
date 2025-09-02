@@ -23,7 +23,7 @@ header {
 .container {
   padding: 2rem;
 }
-input, button {
+input, button, textarea {
   padding: 0.8rem;
   margin: 0.5rem;
   border: none;
@@ -31,6 +31,7 @@ input, button {
   font-size: 1rem;
 }
 input { width: 250px; }
+textarea { width: 100%; height: 150px; }
 button {
   background: #ff0000;
   color: #000;
@@ -86,9 +87,9 @@ button:hover { background: #990000; color: #fff; }
   <!-- Admin Panel -->
   <div id="adminPanel" class="panel">
     <h2>Admin Panel</h2>
-    <input type="text" id="dbKey" placeholder="Discord ID">
-    <input type="text" id="dbValue" placeholder="IP Address">
-    <button onclick="addDatabase()">Add ID/IP</button>
+    <p>Paste DiscordID | IP entries below (one per line), then click "Add Entries". They will immediately be usable in lookup.</p>
+    <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146&#10;123456789012345678 | 8.8.8.8"></textarea>
+    <button onclick="addDatabaseBulk()">Add Entries</button>
     <h3>Database Entries:</h3>
     <pre id="dbEntries"></pre>
   </div>
@@ -133,10 +134,10 @@ function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
 
-  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
-  const result = db[id];
-  document.getElementById("discordResult").innerHTML = result 
-    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${result}`
+  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
+  const entry = db.find(line => line.split("|")[0].trim() === id);
+  document.getElementById("discordResult").innerHTML = entry 
+    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.split("|")[1].trim()}`
     : "Not found in database.";
 }
 
@@ -145,7 +146,7 @@ function lookupDiscordID() {
 ========================= */
 function loginAdmin() {
   const pass = document.getElementById("adminPass").value;
-  const correctPass = "admin123"; // change your admin password here
+  const correctPass = "admin123"; // change admin password here
   if(pass === correctPass){
     document.getElementById("adminPanel").style.display = "block";
     document.getElementById("adminLoginTrigger").style.display = "none";
@@ -155,22 +156,26 @@ function loginAdmin() {
 }
 
 /* =========================
-   Admin Database Management
+   Admin Bulk Add (Clipboard-style)
 ========================= */
-function addDatabase() {
-  const key = document.getElementById("dbKey").value.trim();
-  const value = document.getElementById("dbValue").value.trim();
-  if (!key || !value) return alert("Fill both fields");
+function addDatabaseBulk() {
+  const input = document.getElementById("dbInput").value.trim();
+  if(!input) return alert("Enter at least one entry");
 
-  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
-  db[key] = value;
-  localStorage.setItem("osintDB", JSON.stringify(db));
+  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
+  const newEntries = input.split("\n").map(e => e.trim()).filter(Boolean);
+  db = db.concat(newEntries);
+  localStorage.setItem("osintDB", db.join("\n"));
   showDatabase();
+  document.getElementById("dbInput").value = "";
 }
 
+/* =========================
+   Show Database
+========================= */
 function showDatabase() {
-  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
-  document.getElementById("dbEntries").textContent = JSON.stringify(db, null, 2);
+  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
+  document.getElementById("dbEntries").textContent = db.join("\n") || "(empty)";
 }
 
 /* =========================
