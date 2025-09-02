@@ -5,79 +5,70 @@
 <title>OSINTDark - Discord IP Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #0b0f0c;
-    color: #fff;
-    text-align: center;
-  }
-  header {
-    padding: 2rem;
-    background: #001f3f;
-    font-size: 3rem;
-    font-weight: bold;
-    color: #0f0;
-    text-shadow: 0 0 10px #0f0;
-  }
-  .container {
-    padding: 2rem;
-  }
-  input, button {
-    padding: 0.8rem;
-    margin: 0.5rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-  }
-  input {
-    width: 250px;
-  }
-  button {
-    background: #0f0;
-    color: #000;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-  }
-  button:hover {
-    background: #09c;
-    color: #fff;
-  }
-  .panel {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: #001f3f;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,255,255,0.3);
-    display: none;
-    text-align: left;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .panel h2 {
-    color: #0f0;
-    margin-top: 0;
-  }
-  .user-panel h3, .admin-panel h3 {
-    margin-bottom: 0.5rem;
-  }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #000;
+  color: #fff;
+  text-align: center;
+}
+header {
+  padding: 2rem;
+  background: #330000;
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ff0000;
+  text-shadow: 0 0 10px #ff0000;
+}
+.container {
+  padding: 2rem;
+}
+input, button {
+  padding: 0.8rem;
+  margin: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+input { width: 250px; }
+button {
+  background: #ff0000;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+button:hover { background: #990000; color: #fff; }
+.panel {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #220000;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(255,0,0,0.3);
+  display: none;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.panel h2 { color: #ff0000; margin-top: 0; }
 </style>
 </head>
 <body>
 <header>OSINTDark</header>
 
 <div class="container">
+  <!-- Register / Login -->
   <div id="registerLoginPanel" class="panel" style="display:block;">
     <h2>👤 Register / Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="registerUser()">Register</button>
     <button onclick="loginUser()">Login</button>
-    <div id="loginMessage" style="margin-top:1rem;color:#0f0;"></div>
+    <div id="loginMessage" style="margin-top:1rem;color:#ff0000;"></div>
   </div>
 
+  <!-- User Panel -->
   <div id="userPanel" class="panel">
     <h2>🔎 Discord ID → IP Lookup</h2>
     <input type="text" id="discordInput" placeholder="Enter Discord ID">
@@ -85,8 +76,16 @@
     <div id="discordResult" style="margin-top:1rem;"></div>
   </div>
 
+  <!-- Admin Panel Trigger -->
+  <div id="adminLoginTrigger" class="panel">
+    <h2>⚙️ Admin Login</h2>
+    <input type="password" id="adminPass" placeholder="Enter admin password">
+    <button onclick="loginAdmin()">Login as Admin</button>
+  </div>
+
+  <!-- Admin Panel -->
   <div id="adminPanel" class="panel">
-    <h2>⚙️ Admin Panel</h2>
+    <h2>Admin Panel</h2>
     <input type="text" id="dbKey" placeholder="Discord ID">
     <input type="text" id="dbValue" placeholder="IP Address">
     <button onclick="addDatabase()">Add ID/IP</button>
@@ -96,7 +95,9 @@
 </div>
 
 <script>
-/* ========== User Management ========== */
+/* =========================
+   User Management
+========================= */
 function registerUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -104,7 +105,7 @@ function registerUser() {
 
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
   if (users[username]) return alert("Username already exists");
-  
+
   users[username] = { password, isAdmin: false };
   localStorage.setItem("osintUsers", JSON.stringify(users));
   document.getElementById("loginMessage").textContent = "Registered successfully!";
@@ -122,13 +123,12 @@ function loginUser() {
 
   document.getElementById("registerLoginPanel").style.display = "none";
   document.getElementById("userPanel").style.display = "block";
-
-  if (users[username].isAdmin) {
-    document.getElementById("adminPanel").style.display = "block";
-  }
+  document.getElementById("adminLoginTrigger").style.display = "block";
 }
 
-/* ========== Discord ID → IP Lookup ========== */
+/* =========================
+   Discord ID → IP Lookup
+========================= */
 function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
@@ -140,7 +140,23 @@ function lookupDiscordID() {
     : "Not found in database.";
 }
 
-/* ========== Admin Database Management ========== */
+/* =========================
+   Admin Login
+========================= */
+function loginAdmin() {
+  const pass = document.getElementById("adminPass").value;
+  const correctPass = "admin123"; // change your admin password here
+  if(pass === correctPass){
+    document.getElementById("adminPanel").style.display = "block";
+    document.getElementById("adminLoginTrigger").style.display = "none";
+  } else {
+    alert("Wrong admin password!");
+  }
+}
+
+/* =========================
+   Admin Database Management
+========================= */
 function addDatabase() {
   const key = document.getElementById("dbKey").value.trim();
   const value = document.getElementById("dbValue").value.trim();
@@ -157,7 +173,9 @@ function showDatabase() {
   document.getElementById("dbEntries").textContent = JSON.stringify(db, null, 2);
 }
 
-/* ========== Demo Admin User ========== */
+/* =========================
+   Demo Admin User
+========================= */
 window.onload = () => {
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
   if (!users["admin"]) {
