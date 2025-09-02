@@ -140,54 +140,82 @@ button:hover { background: #00cc7a; color: #fff; }
 function registerUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  if (!username || !password) return alert("Fill both fields");
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (users[username]) return alert("Username already exists");
-  users[username] = { password, isAdmin: false };
-  localStorage.setItem("osintUsers", JSON.stringify(users));
-  document.getElementById("loginMessage").textContent = "Registered successfully!";
+  if(!username || !password) return alert("Fill both fields");
+  let users = JSON.parse(localStorage.getItem("osintUsers")||"{}");
+  if(users[username]) return alert("Username already exists");
+  users[username]={password,isAdmin:false};
+  localStorage.setItem("osintUsers",JSON.stringify(users));
+  document.getElementById("loginMessage").textContent="Registered successfully!";
 }
 
 function loginUser() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  if (!username || !password) return alert("Fill both fields");
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (!users[username] || users[username].password !== password) {
+  const username=document.getElementById("username").value.trim();
+  const password=document.getElementById("password").value.trim();
+  if(!username||!password) return alert("Fill both fields");
+  let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
+  if(!users[username]||users[username].password!==password){
     return alert("Invalid username or password");
   }
-  document.getElementById("registerLoginPanel").style.display = "none";
-  document.getElementById("userPanel").style.display = "block";
-  document.getElementById("adminLoginTrigger").style.display = "block";
+  document.getElementById("registerLoginPanel").style.display="none";
+  document.getElementById("userPanel").style.display="block";
+  document.getElementById("adminLoginTrigger").style.display="block";
 }
 
 /* =========================
    Public Discord ID → IP Lookup
 ========================= */
 function lookupDiscordID() {
-  const id = document.getElementById("discordInput").value.trim();
-  if (!id) return alert("Enter a Discord ID");
-
-  // Load database from localStorage
-  const db = JSON.parse(localStorage.getItem("osintDB") || "[]");
-  const entry = db.find(e => e.discordId === id);
-
-  document.getElementById("lookupResult").innerHTML = entry
-    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.ip}`
-    : "Not found in database.";
+  const id=document.getElementById("discordInput").value.trim();
+  if(!id) return alert("Enter a Discord ID");
+  const db=JSON.parse(localStorage.getItem("osintDB")||"[]");
+  const entry=db.find(e=>e.discordId===id);
+  document.getElementById("lookupResult").innerHTML=entry?
+    `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.ip}`:"Not found in database.";
 }
 
 /* =========================
    Other Lookups
 ========================= */
-async function lookupIP() { /* unchanged */ const ip = document.getElementById("ipInput").value.trim(); if(!ip) return alert("Enter an IP"); try { const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`); const data = await res.json(); if(data.status==="fail"){document.getElementById("lookupResult").innerHTML="Breach not found";return;} document.getElementById("lookupResult").innerHTML=`<b>IP:</b> ${data.query}<br><b>Country:</b> ${data.country}<br><b>City:</b> ${data.city}<br><b>ISP:</b> ${data.isp}<br><b>Org:</b> ${data.org}<br><b>ASN:</b> ${data.as}`;} catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+async function lookupIP() {
+  const ip=document.getElementById("ipInput").value.trim();
+  if(!ip) return alert("Enter an IP");
+  try{
+    const res=await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);
+    const data=await res.json();
+    if(data.status==="fail"){document.getElementById("lookupResult").innerHTML="Breach not found"; return;}
+    document.getElementById("lookupResult").innerHTML=
+      `<b>IP:</b> ${data.query}<br>
+       <b>Country:</b> ${data.country}<br>
+       <b>City:</b> ${data.city}<br>
+       <b>ISP:</b> ${data.isp}<br>
+       <b>Org:</b> ${data.org}<br>
+       <b>ASN:</b> ${data.as}`;
+  }catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+}
+
 async function lookupPhone(){await breachLookup('phoneInput','phone');}
 async function lookupDomain(){await breachLookup('domainInput','domain');}
 async function lookupEmail(){await breachLookup('emailInput','email');}
-async function breachLookup(inputId,type){const value=document.getElementById(inputId).value.trim();if(!value)return alert("Enter a value");try{const res=await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`,{method:"POST",headers:{"X-RapidAPI-Key":"b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d","Content-Type":"application/json"},body:JSON.stringify({value})});const data=await res.json();document.getElementById("lookupResult").innerHTML=(data&&Object.keys(data).length)?JSON.stringify(data,null,2):"Breach not found";}catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+
+async function breachLookup(inputId,type){
+  const value=document.getElementById(inputId).value.trim();
+  if(!value) return alert("Enter a value");
+  try{
+    const res=await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`,{
+      method:"POST",
+      headers:{
+        "X-RapidAPI-Key":"b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d",
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({value})
+    });
+    const data=await res.json();
+    document.getElementById("lookupResult").innerHTML=(data&&Object.keys(data).length)?JSON.stringify(data,null,2):"Breach not found";
+  }catch(e){document.getElementById("lookupResult").innerHTML="Breach not found";}
+}
 
 /* =========================
-   Admin Login & Database Add
+   Admin Login & Add Database Entries
 ========================= */
 function loginAdmin(){
   const pass=document.getElementById("adminPass").value;
@@ -196,13 +224,17 @@ function loginAdmin(){
     document.getElementById("adminLoginTrigger").style.display="none";
   }else alert("Wrong admin password!");
 }
+
 function addDatabaseBulk(){
   const input=document.getElementById("dbInput").value.trim();
-  if(!input)return alert("Enter at least one entry");
+  if(!input) return alert("Enter at least one entry");
   let db=JSON.parse(localStorage.getItem("osintDB")||"[]");
-  const entries=input.split("\n").map(line=>{const [discordId,ip]=line.split("|").map(e=>e.trim());return {discordId,ip};});
+  const entries=input.split("\n").map(line=>{
+    const [discordId,ip]=line.split("|").map(e=>e.trim());
+    return {discordId,ip};
+  });
   db=db.concat(entries);
-  localStorage.setItem("osintDB",JSON.stringify(db)); // persistent, private
+  localStorage.setItem("osintDB",JSON.stringify(db));
   document.getElementById("dbInput").value="";
 }
 
@@ -211,7 +243,7 @@ function addDatabaseBulk(){
 ========================= */
 window.onload=()=>{
   let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
-  if(!users["admin"]){users["admin"]={password:"admin123",isAdmin:true};localStorage.setItem("osintUsers",JSON.stringify(users));}
+  if(!users["admin"]){users["admin"]={password:"admin123",isAdmin:true}; localStorage.setItem("osintUsers",JSON.stringify(users));}
 };
 </script>
 </body>
