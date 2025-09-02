@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINTDark - Lookup Tool</title>
+<title>OSINTDark - Full Lookup Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -23,7 +23,7 @@ header {
 .container {
   padding: 2rem;
 }
-input, button, textarea, select {
+input, button, textarea {
   padding: 0.8rem;
   margin: 0.5rem;
   border: none;
@@ -31,7 +31,7 @@ input, button, textarea, select {
   font-size: 1rem;
 }
 input, select { width: 250px; }
-textarea { width: 100%; height: 150px; }
+textarea { width: 100%; height: 120px; }
 button {
   background: #00ff00;
   color: #000;
@@ -48,11 +48,21 @@ button:hover { background: #009900; color: #fff; }
   box-shadow: 0 0 15px rgba(0,255,0,0.3);
   display: none;
   text-align: left;
-  max-width: 600px;
+  max-width: 650px;
   margin-left: auto;
   margin-right: auto;
 }
 .panel h2 { color: #00ff00; margin-top: 0; }
+.lookup-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.lookup-group input { flex: 1; min-width: 150px; }
+.lookup-group button { flex: 0 0 auto; }
+#lookupResult { margin-top: 1rem; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -73,23 +83,33 @@ button:hover { background: #009900; color: #fff; }
   <!-- User Panel -->
   <div id="userPanel" class="panel">
     <h2>🔎 Lookups</h2>
-    <div>
+
+    <div class="lookup-group">
       <input type="text" id="discordInput" placeholder="Discord ID">
       <button onclick="lookupDiscordID()">Discord ID → IP</button>
     </div>
-    <div>
+
+    <div class="lookup-group">
       <input type="text" id="ipInput" placeholder="IP Address">
       <button onclick="lookupIP()">IP Lookup</button>
     </div>
-    <div>
+
+    <div class="lookup-group">
       <input type="text" id="phoneInput" placeholder="Phone Number">
       <button onclick="lookupPhone()">Phone Lookup</button>
     </div>
-    <div>
+
+    <div class="lookup-group">
       <input type="text" id="domainInput" placeholder="Domain">
       <button onclick="lookupDomain()">Domain Lookup</button>
     </div>
-    <div id="lookupResult" style="margin-top:1rem;"></div>
+
+    <div class="lookup-group">
+      <input type="text" id="emailInput" placeholder="Email / Username">
+      <button onclick="lookupEmail()">Email / Username</button>
+    </div>
+
+    <div id="lookupResult"></div>
   </div>
 
   <!-- Admin Panel Trigger -->
@@ -118,10 +138,8 @@ function registerUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   if (!username || !password) return alert("Fill both fields");
-
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
   if (users[username]) return alert("Username already exists");
-
   users[username] = { password, isAdmin: false };
   localStorage.setItem("osintUsers", JSON.stringify(users));
   document.getElementById("loginMessage").textContent = "Registered successfully!";
@@ -131,24 +149,21 @@ function loginUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   if (!username || !password) return alert("Fill both fields");
-
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
   if (!users[username] || users[username].password !== password) {
     return alert("Invalid username or password");
   }
-
   document.getElementById("registerLoginPanel").style.display = "none";
   document.getElementById("userPanel").style.display = "block";
   document.getElementById("adminLoginTrigger").style.display = "block";
 }
 
 /* =========================
-   Discord ID → IP Lookup
+   Lookups
 ========================= */
 function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
-
   let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
   const entry = db.find(line => line.split("|")[0].trim() === id);
   document.getElementById("lookupResult").innerHTML = entry 
@@ -156,20 +171,13 @@ function lookupDiscordID() {
     : "Not found in database.";
 }
 
-/* =========================
-   IP Lookup
-========================= */
 async function lookupIP() {
   const ip = document.getElementById("ipInput").value.trim();
   if(!ip) return alert("Enter an IP");
-
   try {
     const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);
     const data = await res.json();
-    if(data.status === "fail") {
-      document.getElementById("lookupResult").innerHTML = `IP not found`;
-      return;
-    }
+    if(data.status === "fail") { document.getElementById("lookupResult").innerHTML = "Breach not found"; return; }
     document.getElementById("lookupResult").innerHTML = `
       <b>IP:</b> ${data.query}<br>
       <b>Country:</b> ${data.country}<br>
@@ -178,97 +186,49 @@ async function lookupIP() {
       <b>Org:</b> ${data.org}<br>
       <b>ASN:</b> ${data.as}
     `;
-  } catch(e) {
-    document.getElementById("lookupResult").innerHTML = `IP not found`;
-  }
+  } catch(e) { document.getElementById("lookupResult").innerHTML = "Breach not found"; }
 }
 
-/* =========================
-   Phone Lookup via BreachDirectory API
-========================= */
-async function lookupPhone() {
-  const phone = document.getElementById("phoneInput").value.trim();
-  if(!phone) return alert("Enter a phone number");
+async function lookupPhone() { await breachLookup('phoneInput', 'phone'); }
+async function lookupDomain() { await breachLookup('domainInput', 'domain'); }
+async function lookupEmail() { await breachLookup('emailInput', 'email'); }
 
+async function breachLookup(inputId, type) {
+  const value = document.getElementById(inputId).value.trim();
+  if(!value) return alert("Enter a value");
   try {
-    const res = await fetch("https://breachdirectory.p.rapidapi.com/api/v1/phone/lookup", {
+    const res = await fetch(`https://breachdirectory.p.rapidapi.com/api/v1/${type}/lookup`, {
       method: "POST",
-      headers: {
-        "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ value: phone })
+      headers: { "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d", "Content-Type": "application/json" },
+      body: JSON.stringify({ value })
     });
     const data = await res.json();
-    if (!data || Object.keys(data).length === 0) {
-      document.getElementById("lookupResult").innerHTML = "Breach not found";
-    } else {
-      document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
-    }
-  } catch(e) {
-    document.getElementById("lookupResult").innerHTML = "Breach not found";
-  }
+    document.getElementById("lookupResult").innerHTML = (data && Object.keys(data).length) ? JSON.stringify(data,null,2) : "Breach not found";
+  } catch(e) { document.getElementById("lookupResult").innerHTML = "Breach not found"; }
 }
 
 /* =========================
-   Domain Lookup (via BreachDirectory)
-========================= */
-async function lookupDomain() {
-  const domain = document.getElementById("domainInput").value.trim();
-  if(!domain) return alert("Enter a domain");
-
-  try {
-    const res = await fetch("https://breachdirectory.p.rapidapi.com/api/v1/domain/lookup", {
-      method: "POST",
-      headers: {
-        "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ value: domain })
-    });
-    const data = await res.json();
-    if (!data || Object.keys(data).length === 0) {
-      document.getElementById("lookupResult").innerHTML = "Breach not found";
-    } else {
-      document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
-    }
-  } catch(e) {
-    document.getElementById("lookupResult").innerHTML = "Breach not found";
-  }
-}
-
-/* =========================
-   Admin Login
+   Admin Login & DB
 ========================= */
 function loginAdmin() {
   const pass = document.getElementById("adminPass").value;
-  const correctPass = "admin123"; // change admin password here
+  const correctPass = "admin123";
   if(pass === correctPass){
     document.getElementById("adminPanel").style.display = "block";
     document.getElementById("adminLoginTrigger").style.display = "none";
-  } else {
-    alert("Wrong admin password!");
-  }
+  } else alert("Wrong admin password!");
 }
 
-/* =========================
-   Admin Bulk Add
-========================= */
 function addDatabaseBulk() {
   const input = document.getElementById("dbInput").value.trim();
   if(!input) return alert("Enter at least one entry");
-
   let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  const newEntries = input.split("\n").map(e => e.trim()).filter(Boolean);
-  db = db.concat(newEntries);
+  db = db.concat(input.split("\n").map(e=>e.trim()).filter(Boolean));
   localStorage.setItem("osintDB", db.join("\n"));
   showDatabase();
   document.getElementById("dbInput").value = "";
 }
 
-/* =========================
-   Show Database
-========================= */
 function showDatabase() {
   let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
   document.getElementById("dbEntries").textContent = db.join("\n") || "(empty)";
@@ -279,10 +239,7 @@ function showDatabase() {
 ========================= */
 window.onload = () => {
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (!users["admin"]) {
-    users["admin"] = { password: "admin123", isAdmin: true };
-    localStorage.setItem("osintUsers", JSON.stringify(users));
-  }
+  if (!users["admin"]) { users["admin"] = { password: "admin123", isAdmin: true }; localStorage.setItem("osintUsers", JSON.stringify(users)); }
   showDatabase();
 };
 </script>
