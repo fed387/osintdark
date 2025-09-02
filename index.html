@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 /* =========================
-   Base Styles
+   Base Neon Cyberpunk Styles
 ========================= */
 body {
   margin: 0;
@@ -167,23 +167,18 @@ function loginUser() {
 }
 
 /* =========================
-   Discord ID → IP (Neon API)
+   Discord ID → IP Lookup (public)
 ========================= */
-async function lookupDiscordID() {
+function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
   if (!id) return alert("Enter a Discord ID");
 
-  try {
-    const res = await fetch(`https://app-polished-sky-88221043.dpl.myneon.app/lookup/${id}`);
-    const data = await res.json();
+  let db = JSON.parse(localStorage.getItem("osintDB") || "[]");
+  const entry = db.find(e => e.discordId === id);
 
-    document.getElementById("lookupResult").innerHTML = data.ip
-      ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${data.ip}`
-      : "Not found in database.";
-  } catch (err) {
-    console.error(err);
-    document.getElementById("lookupResult").innerHTML = "Error contacting database";
-  }
+  document.getElementById("lookupResult").innerHTML = entry
+    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.ip}`
+    : "Not found in database.";
 }
 
 /* =========================
@@ -229,7 +224,7 @@ async function breachLookup(inputId, type) {
 }
 
 /* =========================
-   Admin Login & DB (Neon API)
+   Admin Login & DB
 ========================= */
 function loginAdmin() {
   const pass = document.getElementById("adminPass").value;
@@ -240,41 +235,26 @@ function loginAdmin() {
   } else alert("Wrong admin password!");
 }
 
-async function addDatabaseBulk() {
+function addDatabaseBulk() {
   const input = document.getElementById("dbInput").value.trim();
-  if (!input) return alert("Enter at least one entry");
+  if(!input) return alert("Enter at least one entry");
 
+  let db = JSON.parse(localStorage.getItem("osintDB") || "[]");
   const entries = input.split("\n").map(line => {
     const [discordId, ip] = line.split("|").map(e => e.trim());
     return { discordId, ip };
   });
-
-  try {
-    await fetch("https://app-polished-sky-88221043.dpl.myneon.app/add-bulk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries })
-    });
-    document.getElementById("dbInput").value = "";
-    alert("Entries added to Neon database!");
-    showDatabase();
-  } catch (err) {
-    console.error(err);
-    alert("Failed to add entries");
-  }
+  db = db.concat(entries);
+  localStorage.setItem("osintDB", JSON.stringify(db));
+  showDatabase();
+  document.getElementById("dbInput").value = "";
 }
 
-async function showDatabase() {
-  try {
-    const res = await fetch("https://app-polished-sky-88221043.dpl.myneon.app/entries");
-    const data = await res.json();
-    document.getElementById("dbEntries").textContent = data.length
-      ? data.map(e => `${e.discord_id} | ${e.ip_address}`).join("\n")
-      : "(empty)";
-  } catch (err) {
-    console.error(err);
-    document.getElementById("dbEntries").textContent = "(unable to fetch)";
-  }
+function showDatabase() {
+  let db = JSON.parse(localStorage.getItem("osintDB") || "[]");
+  document.getElementById("dbEntries").textContent = db.length
+    ? db.map(e => `${e.discordId} | ${e.ip}`).join("\n")
+    : "(empty)";
 }
 
 /* =========================
