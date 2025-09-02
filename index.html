@@ -8,13 +8,13 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #000;
+  background-color: #001100;
   color: #fff;
   text-align: center;
 }
 header {
   padding: 2rem;
-  background: #003300;
+  background: #002244;
   font-size: 3rem;
   font-weight: bold;
   color: #00ff00;
@@ -43,7 +43,7 @@ button:hover { background: #009900; color: #fff; }
 .panel {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: #002200;
+  background: #002244;
   border-radius: 10px;
   box-shadow: 0 0 15px rgba(0,255,0,0.3);
   display: none;
@@ -66,7 +66,7 @@ button:hover { background: #009900; color: #fff; }
     <input type="password" id="password" placeholder="Password">
     <button onclick="registerUser()">Register</button>
     <button onclick="loginUser()">Login</button>
-    <div id="loginMessage" style="margin-top:1rem;color:#ff0000;"></div>
+    <div id="loginMessage" style="margin-top:1rem;color:#00ff00;"></div>
     <p>Contact: <b>@larpingattacks</b></p>
   </div>
 
@@ -166,7 +166,10 @@ async function lookupIP() {
   try {
     const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);
     const data = await res.json();
-    if(data.status === "fail") throw new Error(data.message);
+    if(data.status === "fail") {
+      document.getElementById("lookupResult").innerHTML = `IP not found`;
+      return;
+    }
     document.getElementById("lookupResult").innerHTML = `
       <b>IP:</b> ${data.query}<br>
       <b>Country:</b> ${data.country}<br>
@@ -176,7 +179,7 @@ async function lookupIP() {
       <b>ASN:</b> ${data.as}
     `;
   } catch(e) {
-    document.getElementById("lookupResult").innerHTML = `Error fetching IP info: ${e.message}`;
+    document.getElementById("lookupResult").innerHTML = `IP not found`;
   }
 }
 
@@ -197,9 +200,13 @@ async function lookupPhone() {
       body: JSON.stringify({ value: phone })
     });
     const data = await res.json();
-    document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+    if (!data || Object.keys(data).length === 0) {
+      document.getElementById("lookupResult").innerHTML = "Breach not found";
+    } else {
+      document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+    }
   } catch(e) {
-    document.getElementById("lookupResult").innerHTML = `Error fetching phone info: ${e.message}`;
+    document.getElementById("lookupResult").innerHTML = "Breach not found";
   }
 }
 
@@ -220,9 +227,13 @@ async function lookupDomain() {
       body: JSON.stringify({ value: domain })
     });
     const data = await res.json();
-    document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+    if (!data || Object.keys(data).length === 0) {
+      document.getElementById("lookupResult").innerHTML = "Breach not found";
+    } else {
+      document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+    }
   } catch(e) {
-    document.getElementById("lookupResult").innerHTML = `Error fetching domain info: ${e.message}`;
+    document.getElementById("lookupResult").innerHTML = "Breach not found";
   }
 }
 
