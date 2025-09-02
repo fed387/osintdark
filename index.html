@@ -140,8 +140,8 @@ button:hover { background: #00cc7a; color: #fff; }
 function registerUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  if(!username || !password) return alert("Fill both fields");
-  let users = JSON.parse(localStorage.getItem("osintUsers")||"{}");
+  if(!username||!password) return alert("Fill both fields");
+  let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
   if(users[username]) return alert("Username already exists");
   users[username]={password,isAdmin:false};
   localStorage.setItem("osintUsers",JSON.stringify(users));
@@ -167,7 +167,11 @@ function loginUser() {
 function lookupDiscordID() {
   const id=document.getElementById("discordInput").value.trim();
   if(!id) return alert("Enter a Discord ID");
-  const db=JSON.parse(localStorage.getItem("osintDB")||"[]");
+
+  // Initialize DB if empty
+  let db=JSON.parse(localStorage.getItem("osintDB")||"[]");
+  if(!Array.isArray(db)) db=[];
+
   const entry=db.find(e=>e.discordId===id);
   document.getElementById("lookupResult").innerHTML=entry?
     `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.ip}`:"Not found in database.";
@@ -244,6 +248,8 @@ function addDatabaseBulk(){
 window.onload=()=>{
   let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
   if(!users["admin"]){users["admin"]={password:"admin123",isAdmin:true}; localStorage.setItem("osintUsers",JSON.stringify(users));}
+  // Ensure DB is array
+  if(!localStorage.getItem("osintDB")) localStorage.setItem("osintDB","[]");
 };
 </script>
 </body>
