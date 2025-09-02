@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINTDark - Discord, IP & Phone Tool</title>
+<title>OSINTDark - Lookup Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -14,65 +14,51 @@ body {
 }
 header {
   padding: 2rem;
-  background: #330000;
+  background: #003300;
   font-size: 3rem;
   font-weight: bold;
-  color: #ff0000;
-  text-shadow: 0 0 10px #ff0000;
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00;
 }
 .container {
   padding: 2rem;
 }
-input, button, textarea {
+input, button, textarea, select {
   padding: 0.8rem;
   margin: 0.5rem;
   border: none;
   border-radius: 6px;
   font-size: 1rem;
 }
-input { width: 180px; }
+input, select { width: 250px; }
 textarea { width: 100%; height: 150px; }
 button {
-  background: #ff0000;
+  background: #00ff00;
   color: #000;
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
-button:hover { background: #990000; color: #fff; }
+button:hover { background: #009900; color: #fff; }
 .panel {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: #220000;
+  background: #002200;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(255,0,0,0.3);
+  box-shadow: 0 0 15px rgba(0,255,0,0.3);
   display: none;
   text-align: left;
-  max-width: 800px;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
 }
-.panel h2 { color: #ff0000; margin-top: 0; }
-.lookup-row {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.lookup-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.result { margin-top: 1rem; max-width: 250px; word-wrap: break-word; }
+.panel h2 { color: #00ff00; margin-top: 0; }
 </style>
 </head>
 <body>
 <header>OSINTDark</header>
 
 <div class="container">
-
   <!-- Register / Login -->
   <div id="registerLoginPanel" class="panel" style="display:block;">
     <h2>👤 Register / Login</h2>
@@ -81,31 +67,29 @@ button:hover { background: #990000; color: #fff; }
     <button onclick="registerUser()">Register</button>
     <button onclick="loginUser()">Login</button>
     <div id="loginMessage" style="margin-top:1rem;color:#ff0000;"></div>
+    <p>Contact: <b>@larpingattacks</b></p>
   </div>
 
   <!-- User Panel -->
   <div id="userPanel" class="panel">
-    <h2>Lookups</h2>
-    <div class="lookup-row">
-      <div class="lookup-col">
-        <h3>🔎 Discord ID → IP</h3>
-        <input type="text" id="discordInput" placeholder="Enter Discord ID">
-        <button onclick="lookupDiscordID()">Search</button>
-        <div id="discordResult" class="result"></div>
-      </div>
-      <div class="lookup-col">
-        <h3>🌐 Public IP Lookup</h3>
-        <input type="text" id="ipInput" placeholder="Enter IP Address">
-        <button onclick="lookupIP()">Search</button>
-        <div id="ipResult" class="result"></div>
-      </div>
-      <div class="lookup-col">
-        <h3>📞 Phone Number Lookup</h3>
-        <input type="text" id="phoneInput" placeholder="Enter Phone Number">
-        <button onclick="lookupPhone()">Search</button>
-        <div id="phoneResult" class="result"></div>
-      </div>
+    <h2>🔎 Lookups</h2>
+    <div>
+      <input type="text" id="discordInput" placeholder="Discord ID">
+      <button onclick="lookupDiscordID()">Discord ID → IP</button>
     </div>
+    <div>
+      <input type="text" id="ipInput" placeholder="IP Address">
+      <button onclick="lookupIP()">IP Lookup</button>
+    </div>
+    <div>
+      <input type="text" id="phoneInput" placeholder="Phone Number">
+      <button onclick="lookupPhone()">Phone Lookup</button>
+    </div>
+    <div>
+      <input type="text" id="domainInput" placeholder="Domain">
+      <button onclick="lookupDomain()">Domain Lookup</button>
+    </div>
+    <div id="lookupResult" style="margin-top:1rem;"></div>
   </div>
 
   <!-- Admin Panel Trigger -->
@@ -118,8 +102,8 @@ button:hover { background: #990000; color: #fff; }
   <!-- Admin Panel -->
   <div id="adminPanel" class="panel">
     <h2>Admin Panel</h2>
-    <p>Paste DiscordID | IP entries below (one per line) to add to the database:</p>
-    <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146&#10;123456789012345678 | 8.8.8.8"></textarea>
+    <p>Paste DiscordID | IP entries below (one per line), then click "Add Entries".</p>
+    <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146"></textarea>
     <button onclick="addDatabaseBulk()">Add Entries</button>
     <h3>Database Entries:</h3>
     <pre id="dbEntries"></pre>
@@ -167,47 +151,79 @@ function lookupDiscordID() {
 
   let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
   const entry = db.find(line => line.split("|")[0].trim() === id);
-  document.getElementById("discordResult").innerHTML = entry 
+  document.getElementById("lookupResult").innerHTML = entry 
     ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${entry.split("|")[1].trim()}`
     : "Not found in database.";
 }
 
 /* =========================
-   Public IP Lookup
+   IP Lookup
 ========================= */
 async function lookupIP() {
   const ip = document.getElementById("ipInput").value.trim();
-  if (!ip) return alert("Enter an IP address");
+  if(!ip) return alert("Enter an IP");
+
   try {
     const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);
     const data = await res.json();
-    const ipResult = document.getElementById("phoneResult");
-    const ipDiv = document.getElementById("ipResult");
-    if(data.status === "fail") {
-      ipDiv.innerHTML = `<b>Error:</b> ${data.message}`;
-    } else {
-      ipDiv.innerHTML = `
-        <b>IP:</b> ${data.query}<br>
-        <b>Country:</b> ${data.country}<br>
-        <b>City:</b> ${data.city}<br>
-        <b>ISP:</b> ${data.isp}<br>
-        <b>Org:</b> ${data.org}<br>
-        <b>ASN:</b> ${data.as}
-      `;
-    }
-  } catch (err) {
-    alert("Error fetching IP info");
+    if(data.status === "fail") throw new Error(data.message);
+    document.getElementById("lookupResult").innerHTML = `
+      <b>IP:</b> ${data.query}<br>
+      <b>Country:</b> ${data.country}<br>
+      <b>City:</b> ${data.city}<br>
+      <b>ISP:</b> ${data.isp}<br>
+      <b>Org:</b> ${data.org}<br>
+      <b>ASN:</b> ${data.as}
+    `;
+  } catch(e) {
+    document.getElementById("lookupResult").innerHTML = `Error fetching IP info: ${e.message}`;
   }
 }
 
 /* =========================
-   Phone Number Lookup
+   Phone Lookup via BreachDirectory API
 ========================= */
-function lookupPhone() {
+async function lookupPhone() {
   const phone = document.getElementById("phoneInput").value.trim();
-  if (!phone) return alert("Enter a phone number");
-  // Demo placeholder; replace with real API if available
-  document.getElementById("phoneResult").innerHTML = `<b>Phone:</b> ${phone}<br><b>Info:</b> Demo lookup (replace with API)`;
+  if(!phone) return alert("Enter a phone number");
+
+  try {
+    const res = await fetch("https://breachdirectory.p.rapidapi.com/api/v1/phone/lookup", {
+      method: "POST",
+      headers: {
+        "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ value: phone })
+    });
+    const data = await res.json();
+    document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+  } catch(e) {
+    document.getElementById("lookupResult").innerHTML = `Error fetching phone info: ${e.message}`;
+  }
+}
+
+/* =========================
+   Domain Lookup (via BreachDirectory)
+========================= */
+async function lookupDomain() {
+  const domain = document.getElementById("domainInput").value.trim();
+  if(!domain) return alert("Enter a domain");
+
+  try {
+    const res = await fetch("https://breachdirectory.p.rapidapi.com/api/v1/domain/lookup", {
+      method: "POST",
+      headers: {
+        "X-RapidAPI-Key": "b0d328332fmshd0e45b1e54c50edp12d2a2jsn57b21afb726d",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ value: domain })
+    });
+    const data = await res.json();
+    document.getElementById("lookupResult").innerHTML = JSON.stringify(data, null, 2);
+  } catch(e) {
+    document.getElementById("lookupResult").innerHTML = `Error fetching domain info: ${e.message}`;
+  }
 }
 
 /* =========================
@@ -225,7 +241,7 @@ function loginAdmin() {
 }
 
 /* =========================
-   Admin Bulk Add (Clipboard-style)
+   Admin Bulk Add
 ========================= */
 function addDatabaseBulk() {
   const input = document.getElementById("dbInput").value.trim();
@@ -248,7 +264,7 @@ function showDatabase() {
 }
 
 /* =========================
-   Demo Admin User
+   Initialize Admin Demo User
 ========================= */
 window.onload = () => {
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
