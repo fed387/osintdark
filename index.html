@@ -1,138 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>OSINTDark - Public IP Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0a0a0a;
-      color: #fff;
-      text-align: center;
-    }
-    header {
-      padding: 2rem;
-      background: #111;
-      font-size: 3rem;
-      font-weight: bold;
-      color: #0ff;
-      text-shadow: 0 0 10px #0ff;
-    }
-    .container {
-      padding: 2rem;
-    }
-    input, button {
-      padding: 0.8rem;
-      margin: 0.5rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-    input {
-      width: 300px;
-    }
-    button {
-      background: #0ff;
-      color: #000;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: #09c;
-      color: #fff;
-    }
-    .result, .admin-panel {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      background: #111;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,255,255,0.3);
-      display: none;
-      text-align: left;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .admin-panel h2 {
-      color: #0ff;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>OSINTDark - Discord IP Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #0b0f0c;
+    color: #fff;
+    text-align: center;
+  }
+  header {
+    padding: 2rem;
+    background: #001f3f;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0;
+  }
+  .container {
+    padding: 2rem;
+  }
+  input, button {
+    padding: 0.8rem;
+    margin: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  input {
+    width: 250px;
+  }
+  button {
+    background: #0f0;
+    color: #000;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+  }
+  button:hover {
+    background: #09c;
+    color: #fff;
+  }
+  .panel {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #001f3f;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,255,255,0.3);
+    display: none;
+    text-align: left;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .panel h2 {
+    color: #0f0;
+    margin-top: 0;
+  }
+  .user-panel h3, .admin-panel h3 {
+    margin-bottom: 0.5rem;
+  }
+</style>
 </head>
 <body>
-  <header>OSINTDark</header>
-  
-  <div class="container">
-    <h2>🔎 Search Public IP Info</h2>
-    <input type="text" id="ipInput" placeholder="Enter IP address">
-    <button onclick="lookupIP()">Search</button>
-    <div id="result" class="result"></div>
+<header>OSINTDark</header>
 
-    <h2>⚙️ Admin Login</h2>
-    <input type="password" id="adminPass" placeholder="Enter admin password">
-    <button onclick="loginAdmin()">Login</button>
-    <div id="adminPanel" class="admin-panel">
-      <h2>Admin Panel</h2>
-      <input type="text" id="dbKey" placeholder="Key">
-      <input type="text" id="dbValue" placeholder="Value">
-      <button onclick="addDatabase()">Add to Database</button>
-      <h3>Database Entries:</h3>
-      <pre id="dbEntries"></pre>
-    </div>
+<div class="container">
+  <div id="registerLoginPanel" class="panel" style="display:block;">
+    <h2>👤 Register / Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="registerUser()">Register</button>
+    <button onclick="loginUser()">Login</button>
+    <div id="loginMessage" style="margin-top:1rem;color:#0f0;"></div>
   </div>
 
-  <script>
-    async function lookupIP() {
-      const ip = document.getElementById("ipInput").value.trim();
-      if (!ip) {
-        alert("Enter an IP address");
-        return;
-      }
-      const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`);
-      const data = await res.json();
-      const resultDiv = document.getElementById("result");
-      if (data.status === "fail") {
-        resultDiv.innerHTML = `<b>Error:</b> ${data.message}`;
-      } else {
-        resultDiv.innerHTML = `
-          <b>IP:</b> ${data.query}<br>
-          <b>Country:</b> ${data.country}<br>
-          <b>City:</b> ${data.city}<br>
-          <b>ISP:</b> ${data.isp}<br>
-          <b>Org:</b> ${data.org}<br>
-          <b>ASN:</b> ${data.as}
-        `;
-      }
-      resultDiv.style.display = "block";
-    }
+  <div id="userPanel" class="panel">
+    <h2>🔎 Discord ID → IP Lookup</h2>
+    <input type="text" id="discordInput" placeholder="Enter Discord ID">
+    <button onclick="lookupDiscordID()">Search</button>
+    <div id="discordResult" style="margin-top:1rem;"></div>
+  </div>
 
-    function loginAdmin() {
-      const pass = document.getElementById("adminPass").value;
-      if (pass === "osintdark123") { // change password here
-        document.getElementById("adminPanel").style.display = "block";
-      } else {
-        alert("Wrong password!");
-      }
-    }
+  <div id="adminPanel" class="panel">
+    <h2>⚙️ Admin Panel</h2>
+    <input type="text" id="dbKey" placeholder="Discord ID">
+    <input type="text" id="dbValue" placeholder="IP Address">
+    <button onclick="addDatabase()">Add ID/IP</button>
+    <h3>Database Entries:</h3>
+    <pre id="dbEntries"></pre>
+  </div>
+</div>
 
-    function addDatabase() {
-      const key = document.getElementById("dbKey").value;
-      const value = document.getElementById("dbValue").value;
-      if (!key || !value) return alert("Fill both fields");
-      let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
-      db[key] = value;
-      localStorage.setItem("osintDB", JSON.stringify(db));
-      showDatabase();
-    }
+<script>
+/* ========== User Management ========== */
+function registerUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!username || !password) return alert("Fill both fields");
 
-    function showDatabase() {
-      let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
-      document.getElementById("dbEntries").textContent = JSON.stringify(db, null, 2);
-    }
+  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
+  if (users[username]) return alert("Username already exists");
+  
+  users[username] = { password, isAdmin: false };
+  localStorage.setItem("osintUsers", JSON.stringify(users));
+  document.getElementById("loginMessage").textContent = "Registered successfully!";
+}
 
-    showDatabase();
-  </script>
+function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!username || !password) return alert("Fill both fields");
+
+  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
+  if (!users[username] || users[username].password !== password) {
+    return alert("Invalid username or password");
+  }
+
+  document.getElementById("registerLoginPanel").style.display = "none";
+  document.getElementById("userPanel").style.display = "block";
+
+  if (users[username].isAdmin) {
+    document.getElementById("adminPanel").style.display = "block";
+  }
+}
+
+/* ========== Discord ID → IP Lookup ========== */
+function lookupDiscordID() {
+  const id = document.getElementById("discordInput").value.trim();
+  if (!id) return alert("Enter a Discord ID");
+
+  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
+  const result = db[id];
+  document.getElementById("discordResult").innerHTML = result 
+    ? `<b>Discord ID:</b> ${id}<br><b>IP:</b> ${result}`
+    : "Not found in database.";
+}
+
+/* ========== Admin Database Management ========== */
+function addDatabase() {
+  const key = document.getElementById("dbKey").value.trim();
+  const value = document.getElementById("dbValue").value.trim();
+  if (!key || !value) return alert("Fill both fields");
+
+  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
+  db[key] = value;
+  localStorage.setItem("osintDB", JSON.stringify(db));
+  showDatabase();
+}
+
+function showDatabase() {
+  let db = JSON.parse(localStorage.getItem("osintDB") || "{}");
+  document.getElementById("dbEntries").textContent = JSON.stringify(db, null, 2);
+}
+
+/* ========== Demo Admin User ========== */
+window.onload = () => {
+  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
+  if (!users["admin"]) {
+    users["admin"] = { password: "admin123", isAdmin: true };
+    localStorage.setItem("osintUsers", JSON.stringify(users));
+  }
+  showDatabase();
+};
+</script>
 </body>
 </html>
