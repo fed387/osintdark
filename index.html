@@ -2,71 +2,58 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINTDark - Discord IP Tool</title>
+<title>OSINTDark - Discord IP Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #000;
   color: #fff;
-  text-align: center;
 }
 header {
   padding: 2rem;
-  background: #001f3f;
+  background: linear-gradient(90deg, #001f3f, #004080);
   font-size: 3rem;
   font-weight: bold;
-  color: #00f;
-  text-shadow: 0 0 10px #00f;
+  color: #0f0;
+  text-shadow: 0 0 10px #0f0;
+  text-align: center;
 }
-.container {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
+.container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.panel { 
+  background: #001f3f; 
+  border-radius: 10px; 
+  margin: 1rem 0; 
+  padding: 1.5rem; 
+  box-shadow: 0 0 20px rgba(0,255,128,0.3);
 }
-input, button, textarea, select {
-  padding: 0.8rem;
-  margin: 0.5rem 0;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+.panel h2 { 
+  margin-top: 0; 
+  color: #0f0;
+  cursor: pointer;
+  user-select: none;
+}
+.collapsibleContent { display: block; }
+input, textarea, select, button {
+  margin: 0.5rem 0; 
+  padding: 0.8rem; 
+  border-radius: 6px; 
+  border: none; 
+  font-size: 1rem; 
 }
 input, select { width: 250px; }
-textarea { width: 100%; height: 120px; }
-button {
-  background: #00f;
-  color: #fff;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-button:hover { background: #009; }
-.panel {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #001f3f;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,255,0.3);
-  display: none;
-  text-align: left;
-}
-.panel h2 { color: #00f; margin-top: 0; }
-#discordContact {
-  margin: 1rem 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-}
-#discordContact img { width: 24px; height: 24px; }
-pre { background:#000033; padding:1rem; border-radius:6px; overflow:auto; }
-a { color: #0ff; text-decoration: none; }
+textarea { width: 100%; height: 100px; }
+button { background:#0f0; color:#000; font-weight:bold; cursor:pointer; transition:0.2s; }
+button:hover { background:#0c0; color:#fff; }
+pre { background:#000022; padding:1rem; border-radius:6px; overflow:auto; }
+a { color: #0ff; text-decoration:none; }
+#discordContact { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:1rem; }
+#discordContact img { width:24px; height:24px; }
 </style>
 </head>
 <body>
-<header>OSINTDark</header>
+<header>OSINTDark Dashboard</header>
 
 <div class="container">
   <div id="discordContact">
@@ -74,260 +61,144 @@ a { color: #0ff; text-decoration: none; }
     Contact: <a href="https://discord.com/users/larpingattacks">@larpingattacks</a>
   </div>
 
-  <!-- Register / Login -->
-  <div id="registerLoginPanel" class="panel" style="display:block;">
+  <!-- Register/Login -->
+  <div class="panel" id="registerLoginPanel">
     <h2>👤 Register / Login</h2>
-    <p>Welcome to OSINTDark! Search Discord IDs to see public IP info. Admins can manage users, blacklist IDs, and view IP data.</p>
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="registerUser()">Register</button>
-    <button onclick="loginUser()">Login</button>
-    <div id="loginMessage" style="margin-top:1rem;color:#f00;"></div>
+    <div class="collapsibleContent">
+      <p>Register to search Discord IDs and see IP info. Admins can manage users, blacklist, and view IP data.</p>
+      <input type="text" id="username" placeholder="Username"><br>
+      <input type="password" id="password" placeholder="Password"><br>
+      <button onclick="registerUser()">Register</button>
+      <button onclick="loginUser()">Login</button>
+      <div id="loginMessage" style="color:#f00;"></div>
+    </div>
   </div>
 
   <!-- User Panel -->
-  <div id="userPanel" class="panel">
+  <div class="panel" id="userPanel" style="display:none;">
     <h2>🔎 Discord ID → IP Lookup</h2>
-    <input type="text" id="discordInput" placeholder="Enter Discord ID">
-    <button onclick="lookupDiscordID()">Search</button>
-    <div id="discordResult" style="margin-top:1rem;"></div>
+    <div class="collapsibleContent">
+      <input type="text" id="discordInput" placeholder="Enter Discord ID">
+      <button onclick="lookupDiscordID()">Search</button>
+      <div id="discordResult" style="margin-top:1rem;"></div>
+    </div>
   </div>
 
-  <!-- Admin Login Trigger -->
-  <div id="adminLoginTrigger" class="panel">
+  <!-- Admin Login -->
+  <div class="panel" id="adminLoginTrigger" style="display:none;">
     <h2>⚙️ Admin Login</h2>
-    <input type="password" id="adminPass" placeholder="Enter admin password">
-    <button onclick="loginAdmin()">Login as Admin</button>
+    <div class="collapsibleContent">
+      <input type="password" id="adminPass" placeholder="Enter admin password">
+      <button onclick="loginAdmin()">Login as Admin</button>
+    </div>
   </div>
 
   <!-- Admin Panel -->
-  <div id="adminPanel" class="panel">
-    <h2>Admin Panel</h2>
+  <div class="panel" id="adminPanel" style="display:none;">
+    <h2>🛠 Admin Panel</h2>
+    <div class="collapsibleContent">
 
-    <!-- Bulk Add -->
-    <h3>📥 Add DiscordID | IP</h3>
-    <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146&#10;123456789012345678 | 8.8.8.8"></textarea>
-    <button onclick="addDatabaseBulk()">Add Entries</button>
-    <h4>Database Entries:</h4>
-    <pre id="dbEntries"></pre>
+      <!-- Bulk Add -->
+      <h3>📥 Add DiscordID | IP</h3>
+      <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146"></textarea>
+      <button onclick="addDatabaseBulk()">Add Entries</button>
+      <h4>Database Entries:</h4>
+      <pre id="dbEntries"></pre>
 
-    <!-- Blacklist -->
-    <h3>🚫 Blacklist Manager</h3>
-    <textarea id="blacklistInput" placeholder="Enter Discord IDs to blacklist, one per line"></textarea>
-    <button onclick="updateBlacklist()">Update Blacklist</button>
-    <h4>Current Blacklist:</h4>
-    <pre id="blacklistDisplay"></pre>
+      <!-- Blacklist -->
+      <h3>🚫 Blacklist Manager</h3>
+      <textarea id="blacklistInput" placeholder="Discord IDs, one per line"></textarea>
+      <button onclick="updateBlacklist()">Update Blacklist</button>
+      <h4>Current Blacklist:</h4>
+      <pre id="blacklistDisplay"></pre>
 
-    <!-- Users -->
-    <h3>👥 Registered Users</h3>
-    <pre id="userListDisplay"></pre>
-    <input type="text" id="banUsername" placeholder="Username to ban">
-    <button onclick="banUser()">Ban User</button>
+      <!-- Users -->
+      <h3>👥 Registered Users</h3>
+      <pre id="userListDisplay"></pre>
+      <input type="text" id="banUsername" placeholder="Username to ban">
+      <button onclick="banUser()">Ban User</button>
 
-    <!-- Admin Lookup -->
-    <h3>🔎 Discord ID → Full IP Info</h3>
-    <input type="text" id="adminLookupInput" placeholder="Enter Discord ID">
-    <button onclick="adminLookup()">Search</button>
-    <div id="adminLookupResult" style="margin-top:1rem;"></div>
+      <!-- Admin Lookup -->
+      <h3>🔎 Discord ID → Full IP Info</h3>
+      <input type="text" id="adminLookupInput" placeholder="Enter Discord ID">
+      <button onclick="adminLookup()">Search</button>
+      <div id="adminLookupResult" style="margin-top:1rem;"></div>
+
+    </div>
   </div>
 </div>
 
 <script>
-/* =========================
-   User Management
-========================= */
+/* Collapsible Panels */
+document.querySelectorAll('.panel h2').forEach(h2=>{
+  h2.addEventListener('click',()=>{ 
+    const content = h2.nextElementSibling;
+    content.style.display = (content.style.display==='none')?'block':'none';
+  });
+});
+
+/* User Management */
 function registerUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  if (!username || !password) return alert("Fill both fields");
-
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (users[username]) return alert("Username already exists");
-
-  users[username] = { password, isAdmin: false };
-  localStorage.setItem("osintUsers", JSON.stringify(users));
-  document.getElementById("loginMessage").textContent = "Registered successfully!";
+  if(!username||!password) return alert("Fill both fields");
+  let users = JSON.parse(localStorage.getItem("osintUsers")||"{}");
+  if(users[username]) return alert("Username exists");
+  users[username] = { password, isAdmin:false };
+  localStorage.setItem("osintUsers",JSON.stringify(users));
+  document.getElementById("loginMessage").textContent="Registered successfully!";
   showUserList();
 }
 
 function loginUser() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  if (!username || !password) return alert("Fill both fields");
-
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (!users[username] || users[username].password !== password) {
-    return alert("Invalid username or password");
+  const username=document.getElementById("username").value.trim();
+  const password=document.getElementById("password").value.trim();
+  let users=JSON.parse(localStorage.getItem("osintUsers")||"{}");
+  if(!users[username]||users[username].password!==password){
+    return alert("Invalid username/password");
   }
-
-  document.getElementById("registerLoginPanel").style.display = "none";
-  document.getElementById("userPanel").style.display = "block";
-  document.getElementById("adminLoginTrigger").style.display = "block";
+  document.getElementById("registerLoginPanel").style.display="none";
+  document.getElementById("userPanel").style.display="block";
+  document.getElementById("adminLoginTrigger").style.display="block";
 }
 
-/* =========================
-   Discord ID → IP Lookup
-========================= */
+/* Discord ID → IP Lookup */
 function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
-  if (!id) return alert("Enter a Discord ID");
-
-  let blacklist = (localStorage.getItem("osintBlacklist") || "").split("\n").filter(Boolean);
-  if (blacklist.includes(id)) {
-    document.getElementById("discordResult").innerHTML = "Breach not found";
-    return;
-  }
-
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  const entry = db.find(line => line.split("|")[0].trim() === id);
+  if(!id)return alert("Enter Discord ID");
+  let blacklist = (localStorage.getItem("osintBlacklist")||"").split("\n").filter(Boolean);
+  if(blacklist.includes(id)){document.getElementById("discordResult").innerHTML="Breach not found"; return;}
+  let db = (localStorage.getItem("osintDB")||"").split("\n").filter(Boolean);
+  const entry = db.find(line=>line.split("|")[0].trim()===id);
   if(entry){
     const ip = entry.split("|")[1].trim();
     fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`)
-      .then(res => res.json())
-      .then(data => {
-        if(data.status !== "success") {
-          document.getElementById("discordResult").innerHTML = "Breach not found";
-        } else {
-          document.getElementById("discordResult").innerHTML = `
-            <b>Discord ID:</b> ${id}<br>
-            <b>IP:</b> ${data.query}<br>
-            <b>Country:</b> ${data.country}<br>
-            <b>City:</b> ${data.city}<br>
-            <b>ISP:</b> ${data.isp}<br>
-            <b>Org:</b> ${data.org}<br>
-            <b>ASN:</b> ${data.as}
-          `;
+      .then(res=>res.json())
+      .then(data=>{
+        if(data.status!=="success"){document.getElementById("discordResult").innerHTML="Breach not found";}
+        else{
+          document.getElementById("discordResult").innerHTML=`<b>Discord ID:</b>${id}<br><b>IP:</b>${data.query}<br><b>Country:</b>${data.country}<br><b>City:</b>${data.city}<br><b>ISP:</b>${data.isp}<br><b>Org:</b>${data.org}<br><b>ASN:</b>${data.as}`;
         }
       }).catch(()=>document.getElementById("discordResult").innerHTML="Breach not found");
-  } else {
-    document.getElementById("discordResult").innerHTML = "Breach not found";
-  }
+  } else document.getElementById("discordResult").innerHTML="Breach not found";
 }
 
-/* =========================
-   Admin Login
-========================= */
-function loginAdmin() {
-  const pass = document.getElementById("adminPass").value;
-  const correctPass = "admin123";
-  if(pass === correctPass){
-    document.getElementById("adminPanel").style.display = "block";
-    document.getElementById("adminLoginTrigger").style.display = "none";
-    showDatabase();
-    showBlacklist();
-    showUserList();
-  } else {
-    alert("Wrong admin password!");
-  }
+/* Admin */
+function loginAdmin(){
+  const pass=document.getElementById("adminPass").value;
+  if(pass==="admin123"){
+    document.getElementById("adminPanel").style.display="block";
+    document.getElementById("adminLoginTrigger").style.display="none";
+    showDatabase(); showBlacklist(); showUserList();
+  }else alert("Wrong admin password!");
 }
-
-/* =========================
-   Admin Bulk Add
-========================= */
-function addDatabaseBulk() {
-  const input = document.getElementById("dbInput").value.trim();
-  if(!input) return alert("Enter at least one entry");
-
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  const lines = input.split("\n").map(l=>l.trim()).filter(Boolean);
-  db.push(...lines);
-  localStorage.setItem("osintDB", db.join("\n"));
-  document.getElementById("dbInput").value = "";
-  showDatabase();
+function addDatabaseBulk(){
+  const input=document.getElementById("dbInput").value.trim();
+  if(!input)return alert("Enter at least one entry");
+  let db=(localStorage.getItem("osintDB")||"").split("\n").filter(Boolean);
+  db.push(...input.split("\n").map(l=>l.trim()).filter(Boolean));
+  localStorage.setItem("osintDB",db.join("\n"));
+  document.getElementById("dbInput").value=""; showDatabase();
 }
-
-function showDatabase() {
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  document.getElementById("dbEntries").textContent = db.join("\n") || "(empty)";
-}
-
-/* =========================
-   Blacklist Manager
-========================= */
-function updateBlacklist() {
-  const input = document.getElementById("blacklistInput").value.trim();
-  if(!input) return alert("Enter at least one Discord ID");
-
-  let blacklist = input.split("\n").map(e => e.trim()).filter(Boolean);
-  localStorage.setItem("osintBlacklist", blacklist.join("\n"));
-  showBlacklist();
-  document.getElementById("blacklistInput").value = "";
-}
-
-function showBlacklist() {
-  let blacklist = (localStorage.getItem("osintBlacklist") || "").split("\n").filter(Boolean);
-  document.getElementById("blacklistDisplay").textContent = blacklist.join("\n") || "(empty)";
-}
-
-/* =========================
-   User List & Ban
-========================= */
-function showUserList() {
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  let list = Object.keys(users).join("\n") || "(empty)";
-  document.getElementById("userListDisplay").textContent = list;
-}
-
-function banUser() {
-  const username = document.getElementById("banUsername").value.trim();
-  if(!username) return alert("Enter username to ban");
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if(users[username]){
-    delete users[username];
-    localStorage.setItem("osintUsers", JSON.stringify(users));
-    showUserList();
-    alert("User banned!");
-  } else {
-    alert("User not found");
-  }
-}
-
-/* =========================
-   Admin DiscordID → Full IP Lookup
-========================= */
-function adminLookup() {
-  const id = document.getElementById("adminLookupInput").value.trim();
-  if (!id) return alert("Enter a Discord ID");
-
-  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
-  const entry = db.find(line => line.split("|")[0].trim() === id);
-  if(entry){
-    const ip = entry.split("|")[1].trim();
-    fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,isp,org,as,query`)
-      .then(res => res.json())
-      .then(data => {
-        if(data.status !== "success") {
-          document.getElementById("adminLookupResult").innerHTML = "Breach not found";
-        } else {
-          document.getElementById("adminLookupResult").innerHTML = `
-            <b>Discord ID:</b> ${id}<br>
-            <b>IP:</b> ${data.query}<br>
-            <b>Country:</b> ${data.country}<br>
-            <b>City:</b> ${data.city}<br>
-            <b>ISP:</b> ${data.isp}<br>
-            <b>Org:</b> ${data.org}<br>
-            <b>ASN:</b> ${data.as}
-          `;
-        }
-      }).catch(()=>document.getElementById("adminLookupResult").innerHTML="Breach not found");
-  } else {
-    document.getElementById("adminLookupResult").innerHTML = "Breach not found";
-  }
-}
-
-/* =========================
-   Initialize
-========================= */
-window.onload = () => {
-  let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
-  if (!users["admin"]) {
-    users["admin"] = { password: "admin123", isAdmin: true };
-    localStorage.setItem("osintUsers", JSON.stringify(users));
-  }
-  showDatabase();
-  showBlacklist();
-  showUserList();
-};
-</script>
-</body>
-</html>
+function showDatabase(){
+  let db=(localStorage.getItem("osintDB")||"
