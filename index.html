@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINTDark - Full Lookup Tool</title>
+<title>OSINTDark - Lookup Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -84,26 +84,35 @@ button:hover { background: #009900; color: #fff; }
   <div id="userPanel" class="panel">
     <h2>🔎 Lookups</h2>
 
+    <!-- Discord ID Lookup -->
     <div class="lookup-group">
       <input type="text" id="discordInput" placeholder="Discord ID">
       <button onclick="lookupDiscordID()">Discord ID → IP</button>
     </div>
+    <div class="lookup-group">
+      <input type="text" id="discordPair" placeholder="DiscordID | IP">
+      <button onclick="addDiscordEntry()">Add Entry</button>
+    </div>
 
+    <!-- IP Lookup -->
     <div class="lookup-group">
       <input type="text" id="ipInput" placeholder="IP Address">
       <button onclick="lookupIP()">IP Lookup</button>
     </div>
 
+    <!-- Phone Lookup -->
     <div class="lookup-group">
       <input type="text" id="phoneInput" placeholder="Phone Number">
       <button onclick="lookupPhone()">Phone Lookup</button>
     </div>
 
+    <!-- Domain Lookup -->
     <div class="lookup-group">
       <input type="text" id="domainInput" placeholder="Domain">
       <button onclick="lookupDomain()">Domain Lookup</button>
     </div>
 
+    <!-- Email Lookup -->
     <div class="lookup-group">
       <input type="text" id="emailInput" placeholder="Email / Username">
       <button onclick="lookupEmail()">Email / Username</button>
@@ -122,7 +131,7 @@ button:hover { background: #009900; color: #fff; }
   <!-- Admin Panel -->
   <div id="adminPanel" class="panel">
     <h2>Admin Panel</h2>
-    <p>Paste DiscordID | IP entries below (one per line), then click "Add Entries".</p>
+    <p>Paste multiple DiscordID | IP entries (one per line).</p>
     <textarea id="dbInput" placeholder="1321603334024728710 | 71.135.90.146"></textarea>
     <button onclick="addDatabaseBulk()">Add Entries</button>
     <h3>Database Entries:</h3>
@@ -159,7 +168,7 @@ function loginUser() {
 }
 
 /* =========================
-   Lookups
+   Discord ID → IP
 ========================= */
 function lookupDiscordID() {
   const id = document.getElementById("discordInput").value.trim();
@@ -171,6 +180,19 @@ function lookupDiscordID() {
     : "Not found in database.";
 }
 
+function addDiscordEntry() {
+  const entry = document.getElementById("discordPair").value.trim();
+  if (!entry.includes("|")) return alert("Format must be: DiscordID | IP");
+  let db = (localStorage.getItem("osintDB") || "").split("\n").filter(Boolean);
+  db.push(entry);
+  localStorage.setItem("osintDB", db.join("\n"));
+  document.getElementById("discordPair").value = "";
+  alert("Entry added!");
+}
+
+/* =========================
+   Other Lookups
+========================= */
 async function lookupIP() {
   const ip = document.getElementById("ipInput").value.trim();
   if(!ip) return alert("Enter an IP");
@@ -212,10 +234,10 @@ async function breachLookup(inputId, type) {
 ========================= */
 function loginAdmin() {
   const pass = document.getElementById("adminPass").value;
-  const correctPass = "admin123";
-  if(pass === correctPass){
+  if(pass === "admin123"){
     document.getElementById("adminPanel").style.display = "block";
     document.getElementById("adminLoginTrigger").style.display = "none";
+    showDatabase();
   } else alert("Wrong admin password!");
 }
 
@@ -235,12 +257,11 @@ function showDatabase() {
 }
 
 /* =========================
-   Initialize Admin Demo User
+   Initialize
 ========================= */
 window.onload = () => {
   let users = JSON.parse(localStorage.getItem("osintUsers") || "{}");
   if (!users["admin"]) { users["admin"] = { password: "admin123", isAdmin: true }; localStorage.setItem("osintUsers", JSON.stringify(users)); }
-  showDatabase();
 };
 </script>
 </body>
